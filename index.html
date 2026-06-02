@@ -1,1 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Pronunciation Checker</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; }
+        .level-box { margin: 20px; padding: 15px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>English Pronunciation Coach</h1>
+    <div id="challenge">Nhấn nút để đọc: "Hello, how are you?"</div>
+    <button onclick="startRecording()">🎤 Bắt đầu nói</button>
+    <h2 id="result">Điểm: --</h2>
 
+    <script>
+        const targetText = "Hello how are you"; // Câu gốc cần so sánh
+
+        function startRecording() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US'; // Chuẩn Anh Mỹ
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                calculateScore(targetText, transcript);
+            };
+        }
+
+        function calculateScore(target, user) {
+            // Thuật toán so sánh đơn giản (Levenshtein)
+            const score = compareStrings(target.toLowerCase(), user.toLowerCase());
+            document.getElementById('result').innerText = `Điểm của bạn: ${score}%`;
+        }
+
+        function compareStrings(s1, s2) {
+            // Hàm tính % độ tương đồng đơn giản
+            let longer = s1.length > s2.length ? s1 : s2;
+            let shorter = s1.length > s2.length ? s2 : s1;
+            let editDistance = levenshtein(longer, shorter);
+            return Math.round(((longer.length - editDistance) / longer.length) * 100);
+        }
+
+        function levenshtein(a, b) {
+            // Thuật toán so sánh văn bản
+            let tmp; if (a.length === 0) { return b.length; } if (b.length === 0) { return a.length; }
+            if (a.length > b.length) { tmp = a; a = b; b = tmp; }
+            let row = Array.from(Array(a.length + 1).keys());
+            for (let i = 1; i <= b.length; i++) {
+                let prev = i;
+                for (let j = 1; j <= a.length; j++) {
+                    let val = (b[i - 1] === a[j - 1]) ? row[j - 1] : Math.min(row[j - 1] + 1, prev + 1, row[j] + 1);
+                    row[j - 1] = prev; prev = val;
+                } row[a.length] = prev;
+            } return row[a.length];
+        }
+    </script>
+</body>
+</html>
